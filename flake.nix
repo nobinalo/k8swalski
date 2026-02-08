@@ -55,7 +55,7 @@
             update-readme = {
               enable = true;
               name = "Update README with CLI help";
-              entry = "${pkgs.nodejs}/bin/node ./scripts/update-readme.js";
+              entry = "${pkgs.nodejs}/bin/node ./.github/scripts/update-readme.js";
               files = "^(src/config\\.rs|src/main\\.rs|Cargo\\.toml)$";
               pass_filenames = false;
             };

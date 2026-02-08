@@ -22,7 +22,7 @@ jobs:
         uses: ./.github/actions/setup-rust-env
       
       - name: Update README
-        run: nix develop --command node scripts/update-readme.js
+        run: nix develop --command node .github/scripts/update-readme.js
       
       - name: Commit changes
         run: |
