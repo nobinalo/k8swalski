@@ -11,8 +11,8 @@ let
   # Load the flake
   flake = (import flakeCompat { src = ../.; }).defaultNix;
 
-  # Read the explicit dependency list from flake.nix
-  allDeps = flake.containerDependencies.${system};
+  # Get packages from the default devShell
+  allDeps = flake.devShells.${system}.default.buildInputs;
 in
 # Build the environment
 pkgs.buildEnv {
