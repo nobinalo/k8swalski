@@ -49,7 +49,7 @@
             };
 
             # Nix hooks
-            nixfmt-rfc-style.enable = true;
+            nixfmt.enable = true;
 
             # Update README on config changes
             update-readme = {
@@ -100,7 +100,7 @@
 
           # Nix tooling
           nixd
-          nixfmt-rfc-style
+          nixfmt
 
           # Other utilities
           curl
