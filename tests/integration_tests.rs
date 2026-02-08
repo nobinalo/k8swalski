@@ -1,4 +1,4 @@
-use axum::http::{StatusCode, HeaderName, HeaderValue};
+use axum::http::{HeaderName, HeaderValue, StatusCode};
 use axum_test::TestServer;
 use serde_json::Value;
 
@@ -8,7 +8,7 @@ use std::sync::Arc;
 fn create_test_server() -> TestServer {
     use k8swalski::config::{Config, LogFormat};
     use std::net::SocketAddr;
-    
+
     let state = AppState {
         config: Arc::new(Config {
             http_port: 8080,
@@ -36,7 +36,7 @@ fn create_test_server() -> TestServer {
         }),
         hostname: "test-host".to_string(),
     };
-    
+
     let app = k8swalski::build_router(state).into_make_service_with_connect_info::<SocketAddr>();
     TestServer::new(app).unwrap()
 }
@@ -121,10 +121,7 @@ async fn test_headers_echo() {
             HeaderName::from_static("x-custom-header"),
             HeaderValue::from_static("custom-value"),
         )
-        .add_header(
-            HeaderName::from_static("user-agent"),
-            HeaderValue::from_static("test-agent"),
-        )
+        .add_header(HeaderName::from_static("user-agent"), HeaderValue::from_static("test-agent"))
         .await;
 
     response.assert_status(StatusCode::OK);
@@ -139,10 +136,7 @@ async fn test_response_body_only() {
     let server = create_test_server();
     let body_content = "test body content";
 
-    let response = server
-        .post("/test?response_body_only=true")
-        .text(body_content)
-        .await;
+    let response = server.post("/test?response_body_only=true").text(body_content).await;
 
     response.assert_status(StatusCode::OK);
 
@@ -172,7 +166,7 @@ async fn test_xhr_detection() {
 async fn test_jwt_decoding() {
     use k8swalski::config::{Config, LogFormat};
     use std::net::SocketAddr;
-    
+
     let config = Config {
         http_port: 8080,
         https_port: 8443,
@@ -195,12 +189,9 @@ async fn test_jwt_decoding() {
         log_without_newline: false,
         override_response_body_file_path: None,
     };
-    
-    let state = AppState {
-        config: Arc::new(config),
-        hostname: "test-host".to_string(),
-    };
-    
+
+    let state = AppState { config: Arc::new(config), hostname: "test-host".to_string() };
+
     let app = k8swalski::build_router(state).into_make_service_with_connect_info::<SocketAddr>();
     let server = TestServer::new(app).unwrap();
 
@@ -209,10 +200,7 @@ async fn test_jwt_decoding() {
 
     let response = server
         .get("/test")
-        .add_header(
-            HeaderName::from_static("authorization"),
-            HeaderValue::from_str(token).unwrap(),
-        )
+        .add_header(HeaderName::from_static("authorization"), HeaderValue::from_str(token).unwrap())
         .await;
 
     response.assert_status(StatusCode::OK);
@@ -229,7 +217,7 @@ async fn test_jwt_decoding() {
 async fn test_metrics_endpoint() {
     use k8swalski::config::{Config, LogFormat};
     use std::net::SocketAddr;
-    
+
     let config = Config {
         http_port: 8080,
         https_port: 8443,
@@ -252,12 +240,9 @@ async fn test_metrics_endpoint() {
         log_without_newline: false,
         override_response_body_file_path: None,
     };
-    
-    let state = AppState {
-        config: Arc::new(config),
-        hostname: "test-host".to_string(),
-    };
-    
+
+    let state = AppState { config: Arc::new(config), hostname: "test-host".to_string() };
+
     let app = k8swalski::build_router(state).into_make_service_with_connect_info::<SocketAddr>();
     let server = TestServer::new(app).unwrap();
 

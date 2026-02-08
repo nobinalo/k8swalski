@@ -1,18 +1,13 @@
 use axum::{
+    Json,
     body::Body,
     extract::{ConnectInfo, Query, Request, State},
     http::{HeaderMap, HeaderValue, StatusCode},
     response::{IntoResponse, Response},
-    Json,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{
-    collections::HashMap,
-    net::SocketAddr,
-    sync::Arc,
-    time::Duration,
-};
+use std::{collections::HashMap, net::SocketAddr, sync::Arc, time::Duration};
 use tokio::time::sleep;
 
 use crate::config::Config;
@@ -27,13 +22,13 @@ pub struct AppState {
 pub struct EchoQueryParams {
     #[serde(rename = "x-set-response-status-code")]
     response_status_code: Option<u16>,
-    
+
     #[serde(rename = "x-set-response-delay-ms")]
     response_delay_ms: Option<u64>,
-    
+
     #[serde(rename = "x-set-response-content-type")]
     response_content_type: Option<String>,
-    
+
     #[serde(rename = "response_body_only")]
     response_body_only: Option<bool>,
 }
@@ -110,16 +105,18 @@ pub async fn echo_handler(
     let uri = &parts.uri;
     let path = uri.path().to_string();
     let protocol = format!("{:?}", parts.version);
-    
+
     // Check if we should override response with file content
     if let Some(file_path) = &state.config.override_response_body_file_path {
         return serve_file(file_path).await;
     }
-    
+
     // Extract status code override
-    let status_code = query_params.response_status_code
+    let status_code = query_params
+        .response_status_code
         .or_else(|| {
-            headers.get("x-set-response-status-code")
+            headers
+                .get("x-set-response-status-code")
                 .and_then(|v| v.to_str().ok())
                 .and_then(|v| v.parse().ok())
         })
@@ -127,20 +124,20 @@ pub async fn echo_handler(
         .unwrap_or(StatusCode::OK);
 
     // Extract delay
-    let delay_ms = query_params.response_delay_ms
-        .or_else(|| {
-            headers.get("x-set-response-delay-ms")
-                .and_then(|v| v.to_str().ok())
-                .and_then(|v| v.parse().ok())
-        });
+    let delay_ms = query_params.response_delay_ms.or_else(|| {
+        headers
+            .get("x-set-response-delay-ms")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.parse().ok())
+    });
 
     // Extract custom content-type
-    let content_type = query_params.response_content_type
-        .or_else(|| {
-            headers.get("x-set-response-content-type")
-                .and_then(|v| v.to_str().ok())
-                .map(|v| v.to_string())
-        });
+    let content_type = query_params.response_content_type.or_else(|| {
+        headers
+            .get("x-set-response-content-type")
+            .and_then(|v| v.to_str().ok())
+            .map(|v| v.to_string())
+    });
 
     // Apply delay if requested
     if let Some(delay) = delay_ms {
@@ -148,7 +145,8 @@ pub async fn echo_handler(
     }
 
     // Parse query parameters
-    let query: HashMap<String, String> = uri.query()
+    let query: HashMap<String, String> = uri
+        .query()
         .map(|q| {
             url::form_urlencoded::parse(q.as_bytes())
                 .map(|(k, v)| (k.to_string(), v.to_string()))
@@ -169,7 +167,8 @@ pub async fn echo_handler(
     let ips = extract_ips(headers, &ip);
 
     // Check if XHR request
-    let xhr = headers.get("x-requested-with")
+    let xhr = headers
+        .get("x-requested-with")
         .and_then(|v| v.to_str().ok())
         .map(|v| v.eq_ignore_ascii_case("XMLHttpRequest"))
         .unwrap_or(false);
@@ -181,12 +180,12 @@ pub async fn echo_handler(
     let subdomains = extract_subdomains(headers);
 
     // Read body
-    let body_bytes = axum::body::to_bytes(body, state.config.max_body_size)
-        .await
-        .unwrap_or_default();
-    
+    let body_bytes =
+        axum::body::to_bytes(body, state.config.max_body_size).await.unwrap_or_default();
+
     // Decompress body if gzipped
-    let body_bytes = if headers.get("content-encoding")
+    let body_bytes = if headers
+        .get("content-encoding")
         .and_then(|v| v.to_str().ok())
         .map(|v| v.eq_ignore_ascii_case("gzip"))
         .unwrap_or(false)
@@ -195,52 +194,42 @@ pub async fn echo_handler(
     } else {
         body_bytes
     };
-    
+
     let body_str = String::from_utf8_lossy(&body_bytes).to_string();
 
     // Parse JSON body if content-type is application/json
-    let content_type_value = headers.get("content-type")
-        .and_then(|v| v.to_str().ok());
-    
-    let json_body = if content_type_value
-        .map(|v| v.contains("application/json"))
-        .unwrap_or(false)
-    {
+    let content_type_value = headers.get("content-type").and_then(|v| v.to_str().ok());
+
+    let json_body = if content_type_value.map(|v| v.contains("application/json")).unwrap_or(false) {
         serde_json::from_slice(&body_bytes).ok()
     } else {
         None
     };
 
     // OS info
-    let os_info = Some(OsInfo {
-        hostname: state.hostname.clone(),
-    });
+    let os_info = Some(OsInfo { hostname: state.hostname.clone() });
 
     // Connection info
-    let connection_info = headers.get("host")
+    let connection_info = headers
+        .get("host")
         .and_then(|v| v.to_str().ok())
-        .map(|host| ConnectionInfo {
-            servername: Some(host.to_string()),
-        });
+        .map(|host| ConnectionInfo { servername: Some(host.to_string()) });
 
     // Environment variables
-    let environment = if state.config.include_env_vars {
-        Some(std::env::vars().collect())
-    } else {
-        None
-    };
+    let environment =
+        if state.config.include_env_vars { Some(std::env::vars().collect()) } else { None };
 
     // JWT decoding
     #[cfg(feature = "jwt")]
     let jwt = extract_jwt(headers, &state.config);
-    
+
     #[cfg(not(feature = "jwt"))]
     let jwt = None;
 
     // mTLS client cert info
     #[cfg(feature = "mtls")]
     let client_cert = extract_client_cert(headers);
-    
+
     #[cfg(not(feature = "mtls"))]
     let client_cert = None;
 
@@ -279,13 +268,13 @@ pub async fn echo_handler(
     if query_params.response_body_only.unwrap_or(false) {
         let mut response = Response::new(Body::from(body_str));
         *response.status_mut() = status_code;
-        
+
         if let Some(ct) = content_type {
             if let Ok(header_value) = HeaderValue::from_str(&ct) {
                 response.headers_mut().insert("content-type", header_value);
             }
         }
-        
+
         return response;
     }
 
@@ -306,19 +295,19 @@ pub async fn echo_handler(
         if let Ok(header_value) = HeaderValue::from_str(origin) {
             response.headers_mut().insert("access-control-allow-origin", header_value);
         }
-        
+
         if let Some(methods) = &state.config.cors_allow_methods {
             if let Ok(header_value) = HeaderValue::from_str(methods) {
                 response.headers_mut().insert("access-control-allow-methods", header_value);
             }
         }
-        
+
         if let Some(headers_val) = &state.config.cors_allow_headers {
             if let Ok(header_value) = HeaderValue::from_str(headers_val) {
                 response.headers_mut().insert("access-control-allow-headers", header_value);
             }
         }
-        
+
         if let Some(credentials) = &state.config.cors_allow_credentials {
             if let Ok(header_value) = HeaderValue::from_str(credentials) {
                 response.headers_mut().insert("access-control-allow-credentials", header_value);
@@ -331,100 +320,82 @@ pub async fn echo_handler(
 
 fn extract_ips(headers: &HeaderMap, default_ip: &str) -> Vec<String> {
     let mut ips = vec![default_ip.to_string()];
-    
+
     if let Some(forwarded) = headers.get("x-forwarded-for") {
         if let Ok(forwarded_str) = forwarded.to_str() {
-            let forwarded_ips: Vec<String> = forwarded_str
-                .split(',')
-                .map(|s| s.trim().to_string())
-                .collect();
+            let forwarded_ips: Vec<String> =
+                forwarded_str.split(',').map(|s| s.trim().to_string()).collect();
             ips.extend(forwarded_ips);
         }
     }
-    
+
     ips
 }
 
 #[cfg(feature = "jwt")]
 fn extract_jwt(headers: &HeaderMap, config: &Config) -> Option<JwtInfo> {
     let jwt_header = config.jwt_header.as_deref().unwrap_or("authorization");
-    
-    let token = headers.get(jwt_header)
+
+    let token = headers
+        .get(jwt_header)
         .and_then(|v| v.to_str().ok())
-        .map(|v| {
-            if v.to_lowercase().starts_with("bearer ") {
-                &v[7..]
-            } else {
-                v
-            }
-        })?;
+        .map(|v| if v.to_lowercase().starts_with("bearer ") { &v[7..] } else { v })?;
 
     let header = jsonwebtoken::decode_header(token).ok()?;
-    
+
     // Decode without verification (just for inspection)
     let mut validation = jsonwebtoken::Validation::default();
     validation.insecure_disable_signature_validation();
     validation.validate_exp = false;
-    
-    let decoding_key = jsonwebtoken::DecodingKey::from_secret(&[]);
-    
-    // Try to decode payload as generic JSON
-    let payload = if let Ok(token_data) = jsonwebtoken::decode::<Value>(
-        token,
-        &decoding_key,
-        &validation,
-    ) {
-        Some(token_data.claims)
-    } else {
-        None
-    };
 
-    Some(JwtInfo {
-        header: serde_json::to_value(header).ok(),
-        payload,
-    })
+    let decoding_key = jsonwebtoken::DecodingKey::from_secret(&[]);
+
+    // Try to decode payload as generic JSON
+    let payload =
+        if let Ok(token_data) = jsonwebtoken::decode::<Value>(token, &decoding_key, &validation) {
+            Some(token_data.claims)
+        } else {
+            None
+        };
+
+    Some(JwtInfo { header: serde_json::to_value(header).ok(), payload })
 }
 
 #[cfg(feature = "mtls")]
 fn extract_client_cert(headers: &HeaderMap) -> Option<ClientCertInfo> {
     // Check for common headers that contain client certificate info
     // These are typically set by reverse proxies (nginx, envoy, etc.)
-    
-    let subject = headers.get("x-client-cert-subject")
+
+    let subject = headers
+        .get("x-client-cert-subject")
         .or_else(|| headers.get("ssl-client-subject-dn"))
         .and_then(|v| v.to_str().ok())
         .map(|s| s.to_string())?;
 
-    let issuer = headers.get("x-client-cert-issuer")
+    let issuer = headers
+        .get("x-client-cert-issuer")
         .or_else(|| headers.get("ssl-client-issuer-dn"))
         .and_then(|v| v.to_str().ok())
         .map(|s| s.to_string())
         .unwrap_or_default();
 
-    let subjectaltname = headers.get("x-client-cert-san")
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.to_string());
+    let subjectaltname =
+        headers.get("x-client-cert-san").and_then(|v| v.to_str().ok()).map(|s| s.to_string());
 
-    let info = headers.get("x-client-cert-info")
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.to_string());
+    let info =
+        headers.get("x-client-cert-info").and_then(|v| v.to_str().ok()).map(|s| s.to_string());
 
-    Some(ClientCertInfo {
-        subject,
-        issuer,
-        subjectaltname,
-        info,
-    })
+    Some(ClientCertInfo { subject, issuer, subjectaltname, info })
 }
 
 #[cfg(feature = "prometheus")]
 pub async fn metrics_handler() -> Response {
     use prometheus::{Encoder, TextEncoder};
-    
+
     let encoder = TextEncoder::new();
     let metric_families = prometheus::gather();
     let mut buffer = vec![];
-    
+
     if encoder.encode(&metric_families, &mut buffer).is_ok() {
         Response::builder()
             .status(StatusCode::OK)
@@ -437,16 +408,13 @@ pub async fn metrics_handler() -> Response {
                     .unwrap()
             })
     } else {
-        Response::builder()
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .body(Body::empty())
-            .unwrap()
+        Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap()
     }
 }
 
 fn extract_cookies(headers: &HeaderMap) -> Option<HashMap<String, String>> {
     let cookie_header = headers.get("cookie")?.to_str().ok()?;
-    
+
     let mut cookies = HashMap::new();
     for cookie in cookie_header.split(';') {
         let cookie = cookie.trim();
@@ -454,35 +422,25 @@ fn extract_cookies(headers: &HeaderMap) -> Option<HashMap<String, String>> {
             cookies.insert(key.trim().to_string(), value.trim().to_string());
         }
     }
-    
-    if cookies.is_empty() {
-        None
-    } else {
-        Some(cookies)
-    }
+
+    if cookies.is_empty() { None } else { Some(cookies) }
 }
 
 fn extract_subdomains(headers: &HeaderMap) -> Option<Vec<String>> {
     let host = headers.get("host")?.to_str().ok()?;
-    
+
     // Remove port if present
     let host = host.split(':').next()?;
-    
+
     // Split by dots and extract subdomains (excluding TLD and domain)
     let parts: Vec<&str> = host.split('.').collect();
-    
+
     // Need at least 3 parts to have subdomains (e.g., sub.example.com)
     if parts.len() > 2 {
-        let subdomains: Vec<String> = parts[..parts.len()-2]
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
-        
-        if subdomains.is_empty() {
-            None
-        } else {
-            Some(subdomains)
-        }
+        let subdomains: Vec<String> =
+            parts[..parts.len() - 2].iter().map(|s| s.to_string()).collect();
+
+        if subdomains.is_empty() { None } else { Some(subdomains) }
     } else {
         None
     }
@@ -490,13 +448,11 @@ fn extract_subdomains(headers: &HeaderMap) -> Option<Vec<String>> {
 
 async fn serve_file(file_path: &std::path::Path) -> Response {
     use tokio::fs;
-    
+
     match fs::read(file_path).await {
         Ok(contents) => {
-            let mime_type = mime_guess::from_path(file_path)
-                .first_or_octet_stream()
-                .to_string();
-            
+            let mime_type = mime_guess::from_path(file_path).first_or_octet_stream().to_string();
+
             Response::builder()
                 .status(StatusCode::OK)
                 .header("content-type", mime_type)
@@ -507,20 +463,18 @@ async fn serve_file(file_path: &std::path::Path) -> Response {
                         .body(Body::from("Failed to build response"))
                         .unwrap()
                 })
-        }
-        Err(e) => {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::from(format!("Failed to read file: {}", e)))
-                .unwrap()
-        }
+        },
+        Err(e) => Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .body(Body::from(format!("Failed to read file: {}", e)))
+            .unwrap(),
     }
 }
 
 fn decompress_gzip(data: &[u8]) -> Result<bytes::Bytes, std::io::Error> {
     use flate2::read::GzDecoder;
     use std::io::Read;
-    
+
     let mut decoder = GzDecoder::new(data);
     let mut decompressed = Vec::new();
     decoder.read_to_end(&mut decompressed)?;
