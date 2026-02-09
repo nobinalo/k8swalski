@@ -33,131 +33,53 @@ curl http://localhost:8080/test
 pre-commit installed at .git/hooks/pre-commit
 k8swalski dev environment loaded
 Run 'task --list' to see available tasks
-HTTP/HTTPS echo server for debugging and testing.
-
-Features:
-  • Dual HTTP/HTTPS support with configurable ports
-  • Request echo (headers, body, query params, IP)
-  • Response manipulation (custom status, delays, content-type)
-  • JWT decoding, Prometheus metrics support
-  • JSON or human-readable logging with path filtering
-  • CORS support with flexible configuration
-  • Multi-arch Docker images (amd64, arm64)
+HTTP/HTTPS echo server for debugging and testing
 
 Usage: k8swalski [OPTIONS]
 
 Options:
       --http-port <HTTP_PORT>
-          HTTP port to listen on
-          
-          [env: HTTP_PORT=]
-          [default: 8080]
-
+          HTTP port to listen on [env: HTTP_PORT=] [default: 8080]
       --https-port <HTTPS_PORT>
-          HTTPS port to listen on
-          
-          [env: HTTPS_PORT=]
-          [default: 8443]
-
+          HTTPS port to listen on [env: HTTPS_PORT=] [default: 8443]
       --tls-cert-path <TLS_CERT_PATH>
-          Path to TLS certificate file
-          
-          [env: TLS_CERT_PATH=]
-          [default: /tmp/cert.pem]
-
+          Path to TLS certificate file [env: TLS_CERT_PATH=] [default: /tmp/cert.pem]
       --tls-key-path <TLS_KEY_PATH>
-          Path to the TLS key file
-          
-          [env: TLS_KEY_PATH=]
-          [default: /tmp/key.pem]
-
+          Path to the TLS key file [env: TLS_KEY_PATH=] [default: /tmp/key.pem]
       --max-body-size <MAX_BODY_SIZE>
-          Maximum request body size in bytes
-          
-          [env: MAX_BODY_SIZE=]
-          [default: 10485760]
-
+          Maximum request body size in bytes [env: MAX_BODY_SIZE=] [default: 10485760]
       --log-format <LOG_FORMAT>
-          Log format: "human" or "json"
-          
-          [env: LOG_FORMAT=]
-          [default: human]
-
+          Log format: "human" or "json" [env: LOG_FORMAT=] [default: human]
       --disable-request-logs
-          Disable request logging
-          
-          [env: DISABLE_REQUEST_LOGS=]
-
+          Disable request logging [env: DISABLE_REQUEST_LOGS=]
       --log-ignore-path <LOG_IGNORE_PATH>
-          Regex pattern for paths to ignore in logs
-          
-          [env: LOG_IGNORE_PATH=]
-
+          Regex pattern for paths to ignore in logs [env: LOG_IGNORE_PATH=]
       --include-env-vars
-          Include environment variables in response
-          
-          [env: INCLUDE_ENV_VARS=]
-
+          Include environment variables in response [env: INCLUDE_ENV_VARS=]
       --jwt-header <JWT_HEADER>
-          Decode JWT tokens in Authorization header
-          
-          [env: JWT_HEADER=]
-
+          Decode JWT tokens in Authorization header [env: JWT_HEADER=]
       --prometheus
-          Enable Prometheus metrics endpoint
-          
-          [env: PROMETHEUS=]
-
+          Enable Prometheus metrics endpoint [env: PROMETHEUS=]
       --enable-cors
-          Enable CORS
-          
-          [env: ENABLE_CORS=]
-
+          Enable CORS [env: ENABLE_CORS=]
       --cors-allow-origin <CORS_ALLOW_ORIGIN>
-          CORS Allow-Origin header value
-          
-          [env: CORS_ALLOW_ORIGIN=]
-
+          CORS Allow-Origin header value [env: CORS_ALLOW_ORIGIN=]
       --cors-allow-methods <CORS_ALLOW_METHODS>
-          CORS Allow-Methods header value
-          
-          [env: CORS_ALLOW_METHODS=]
-
+          CORS Allow-Methods header value [env: CORS_ALLOW_METHODS=]
       --cors-allow-headers <CORS_ALLOW_HEADERS>
-          CORS Allow-Headers header value
-          
-          [env: CORS_ALLOW_HEADERS=]
-
+          CORS Allow-Headers header value [env: CORS_ALLOW_HEADERS=]
       --cors-allow-credentials <CORS_ALLOW_CREDENTIALS>
-          CORS Allow-Credentials header value
-          
-          [env: CORS_ALLOW_CREDENTIALS=]
-
+          CORS Allow-Credentials header value [env: CORS_ALLOW_CREDENTIALS=]
       --max-header-size <MAX_HEADER_SIZE>
-          Maximum header size in bytes
-          
-          [env: MAX_HEADER_SIZE=]
-          [default: 16384]
-
+          Maximum header size in bytes [env: MAX_HEADER_SIZE=] [default: 16384]
       --echo-back-to-client <ECHO_BACK_TO_CLIENT>
-          Disable echoing response back to client (send empty response)
-          
-          [env: ECHO_BACK_TO_CLIENT=]
-          [possible values: true, false]
-
+          Disable echoing response back to client (send empty response) [env: ECHO_BACK_TO_CLIENT=] [possible values: true, false]
       --log-without-newline
-          Log JSON output without newlines
-          
-          [env: LOG_WITHOUT_NEWLINE=]
-
+          Log JSON output without newlines [env: LOG_WITHOUT_NEWLINE=]
       --override-response-body-file-path <OVERRIDE_RESPONSE_BODY_FILE_PATH>
-          Override response body with file content (path relative to current directory)
-          
-          [env: OVERRIDE_RESPONSE_BODY_FILE_PATH=]
-
+          Override response body with file content (path relative to current directory) [env: OVERRIDE_RESPONSE_BODY_FILE_PATH=]
   -h, --help
-          Print help (see a summary with '-h')
-
+          Print help
   -V, --version
           Print version
 ```
