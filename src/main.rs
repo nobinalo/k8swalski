@@ -28,13 +28,13 @@ use k8swalski::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Handle health check flag before parsing full config
-    if std::env::args().any(|arg| arg == "--check-health") {
-        return health_check();
-    }
-
     // Parse configuration
     let config = Config::parse();
+
+    // Handle health check flag
+    if config.check_health {
+        return health_check();
+    }
 
     // Initialize logging
     init_logging(&config.log_format);

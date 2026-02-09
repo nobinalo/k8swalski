@@ -87,6 +87,10 @@ pub struct Config {
     /// Override response body with file content (path relative to current directory)
     #[arg(long, env = "OVERRIDE_RESPONSE_BODY_FILE_PATH")]
     pub override_response_body_file_path: Option<PathBuf>,
+
+    /// Perform health check and exit (used by Docker HEALTHCHECK)
+    #[arg(long)]
+    pub check_health: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

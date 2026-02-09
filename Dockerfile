@@ -19,6 +19,10 @@ WORKDIR /app
 # Copy pre-built binary from artifact
 COPY artifact/k8swalski /app/k8swalski
 
+# Health check using the binary itself
+HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
+  CMD ["/app/k8swalski", "--check-health"]
+
 # Run as nonroot user
 USER ${UID}:${GID}
 

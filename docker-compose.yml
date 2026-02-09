@@ -16,10 +16,4 @@ services:
       - LOG_FORMAT=json
       - INCLUDE_ENV_VARS=false
       - PROMETHEUS=true
-    healthcheck:
-      test: ["CMD", "/app/k8swalski", "--check-health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
     restart: unless-stopped
