@@ -36,6 +36,10 @@
             "rust-analyzer"
             "clippy"
           ];
+          targets = [
+            "x86_64-unknown-linux-gnu"
+            "aarch64-unknown-linux-gnu"
+          ];
         };
 
         pre-commit-check = pre-commit-hooks.lib.${system}.run {
@@ -64,6 +68,7 @@
           # Development tools
           cargo-watch
           cargo-nextest
+          sccache
 
           # Task runner
           go-task
@@ -82,6 +87,7 @@
 
           shellHook = ''
             ${pre-commit-check.shellHook}
+            export RUSTC_WRAPPER=sccache
             echo "k8swalski dev environment loaded"
             echo "Run 'task --list' to see available tasks"
           '';
@@ -96,7 +102,12 @@
             pkg-config
             openssl
             cargo-nextest
+            sccache
           ];
+
+          shellHook = ''
+            export RUSTC_WRAPPER=sccache
+          '';
 
           RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
           PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";

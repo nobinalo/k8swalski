@@ -49,3 +49,22 @@ tasks:
   clean:docker:
     desc: "Clean Docker build cache"
     cmd: docker builder prune -f
+
+  # Docker tasks
+  docker:build-multiarch:
+    desc: "Build multi-arch images locally"
+    cmd: |
+      docker buildx build . \
+        --platform linux/amd64,linux/arm64 \
+        --tag k8swalski:latest
+
+  # sccache tasks
+  sccache:stats:
+    desc: "Show sccache statistics"
+    cmd: sccache --show-stats
+
+  sccache:clear:
+    desc: "Clear sccache cache"
+    cmds:
+      - sccache --stop-server || true
+      - rm -rf ~/.cache/sccache
