@@ -25,9 +25,11 @@ jobs:
         id: help
         run: |
           HELP_OUTPUT=$(nix develop --command cargo run --quiet -- --help)
-          echo "content<<EOF" >> $GITHUB_OUTPUT
-          echo "$HELP_OUTPUT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          cat >> $GITHUB_OUTPUT <<EOF
+          content<<CONTENT
+          $HELP_OUTPUT
+          CONTENT
+          EOF
       
       - name: Update README
         uses: actions/github-script@v7
