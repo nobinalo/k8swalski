@@ -5,12 +5,12 @@ runs:
   using: "composite"
   steps:
     - name: Install Nix with Determinate Systems installer
-      uses: DeterminateSystems/nix-installer-action@main
+      uses: DeterminateSystems/nix-installer-action@v20
       with:
         determinate: false
 
     - name: Setup Nix cache
-      uses: DeterminateSystems/magic-nix-cache-action@main
+      uses: DeterminateSystems/magic-nix-cache-action@v9
       with:
         use-flakehub: false
 
