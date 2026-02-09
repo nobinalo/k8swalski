@@ -37,13 +37,10 @@ jobs:
         uses: ./.github/actions/setup-rust-env
       
       - name: Run checks
-        run: |
-          nix develop .#ci --command cargo check --all-features
-          nix develop .#ci --command cargo clippy --all-features -- -D warnings
-          nix develop .#ci --command cargo fmt -- --check
+        run: nix develop .#ci --command task ci:check ci:clippy ci:fmt
       
       - name: Run tests
-        run: nix develop .#ci --command cargo nextest run --all-features
+        run: nix develop .#ci --command task ci:test
 
   build-binary:
     name: Build Binary ${{ matrix.arch }}
@@ -73,7 +70,7 @@ jobs:
       - name: Build binary
         run: |
           nix develop .#ci --command bash -c '
-            cargo build --release --target ${{ matrix.target }}
+            task ci:build TARGET=${{ matrix.target }}
             strip target/${{ matrix.target }}/release/k8swalski
           '
       

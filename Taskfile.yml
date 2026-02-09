@@ -35,6 +35,27 @@ tasks:
     desc: "Build the project in release mode"
     cmd: cargo build --release
 
+  # CI tasks
+  ci:check:
+    desc: "Run cargo check"
+    cmd: cargo check --all-features
+
+  ci:clippy:
+    desc: "Run cargo clippy"
+    cmd: cargo clippy --all-features -- -D warnings
+
+  ci:fmt:
+    desc: "Check code formatting"
+    cmd: cargo fmt -- --check
+
+  ci:test:
+    desc: "Run tests"
+    cmd: cargo nextest run --all-features
+
+  ci:build:
+    desc: "Build release binary for target"
+    cmd: cargo build --release --target {{.TARGET}}
+
   # Test tasks
   test:watch:
     desc: "Watch and run tests on changes"
