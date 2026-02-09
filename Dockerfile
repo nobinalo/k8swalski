@@ -12,10 +12,12 @@ ARG GID
 
 WORKDIR /app
 
-# Install sccache (latest version)
-RUN --mount=type=cache,target=/home/nonroot/.cargo/registry,uid=${UID},gid=${GID},sharing=locked \
-    --mount=type=cache,target=/home/nonroot/.cargo/git,uid=${UID},gid=${GID},sharing=locked \
-    cargo install sccache --version 0.13.0 --locked
+# Install sccache (cached in /tmp to avoid permission issues)
+RUN --mount=type=cache,target=/tmp/cargo-cache,uid=${UID},gid=${GID},sharing=locked \
+    if [ ! -f /tmp/cargo-cache/sccache ]; then \
+        cargo install sccache --version 0.13.0 --locked --root /tmp/cargo-cache; \
+    fi && \
+    cp /tmp/cargo-cache/bin/sccache /home/nonroot/.cargo/bin/sccache
 
 # Configure sccache environment
 ENV SCCACHE_DIR=/home/nonroot/.cache/sccache \
