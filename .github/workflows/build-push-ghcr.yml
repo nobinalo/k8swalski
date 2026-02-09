@@ -32,6 +32,7 @@ jobs:
       
       - name: Setup sccache
         uses: mozilla/sccache-action@v0.0.9
+        continue-on-error: true
       
       - name: Setup Rust Environment
         uses: ./.github/actions/setup-rust-env
@@ -63,6 +64,7 @@ jobs:
       
       - name: Setup sccache
         uses: mozilla/sccache-action@v0.0.9
+        continue-on-error: true
       
       - name: Setup Rust Environment
         uses: ./.github/actions/setup-rust-env
