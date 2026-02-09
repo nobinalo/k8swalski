@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8swalski
+spec:
+  template:
+    spec:
+      containers:
+      - name: k8swalski
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        env:
+        - name: LOG_FORMAT
+          value: "json"
+        - name: LOG_WITHOUT_NEWLINE
+          value: "true"

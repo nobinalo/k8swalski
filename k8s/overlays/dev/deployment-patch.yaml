@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8swalski
+spec:
+  template:
+    spec:
+      containers:
+      - name: k8swalski
+        env:
+        - name: LOG_FORMAT
+          value: "human"
+        - name: DISABLE_REQUEST_LOGS
+          value: "false"
