@@ -1,15 +1,8 @@
 # syntax=docker/dockerfile:1
 
-# Build arguments for security
-ARG UID=65532
-ARG GID=65532
-
 # Runtime: Ultra-minimal static base (no shell, no package manager)
+# Runs as non-root user 65532 by default
 FROM chainguard/static:latest
-
-# Re-declare after FROM for use in later stages
-ARG UID
-ARG GID
 
 # OCI standard labels
 LABEL org.opencontainers.image.title="k8swalski" \
@@ -21,10 +14,7 @@ LABEL org.opencontainers.image.title="k8swalski" \
 WORKDIR /app
 
 # Copy pre-built binary (from GHA artifact)
-COPY --chown=${UID}:${GID} artifact/k8swalski ./k8swalski
-
-# Switch to non-root user for security
-USER ${UID}:${GID}
+COPY artifact/k8swalski ./k8swalski
 
 # Expose HTTP and HTTPS ports
 EXPOSE 8080 8443
