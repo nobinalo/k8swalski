@@ -23,7 +23,11 @@ axum = { version = "0.8.8", features = ["macros", "http2"] }
 axum-server = { version = "0.8.0", default-features = false, features = [
     "tls-rustls",
 ] }
-rustls = { version = "0.22", default-features = false, features = ["ring", "tls12"] }
+rustls = { version = "0.23.36", default-features = false, features = [
+    "ring",
+    "std",
+    "tls12",
+] }
 webpki-roots = "1.0.6"
 tokio = { version = "1.49.0", features = [
     "rt-multi-thread",
@@ -77,8 +81,8 @@ url = "2.5.8"
 flate2 = "1.1.9"
 mime_guess = "2.0.5"
 bytes = "1.11.1"
-reqwest = { version = "0.12", default-features = false, features = [
-    "rustls-tls-webpki-roots",
+reqwest = { version = "0.13.2", default-features = false, features = [
+    "rustls",
     "blocking",
 ] }
 
