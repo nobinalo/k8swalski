@@ -5,48 +5,17 @@
 
 HTTP/HTTPS echo server for debugging and testing. Built with Rust (axum + tokio).
 
-## Features
-
-- HTTP & HTTPS servers (self-signed TLS)
-- Request echo (headers, body, query params, IP)
-- Response manipulation (custom status, delays, content-type)
-- JWT decoding, Prometheus metrics, mTLS support
-- JSON or human-readable logging
-- Multi-arch: amd64, arm64
-
 ## Quick Start
 
 ```bash
 # Docker
 docker run -p 8080:8080 -p 8443:8443 ghcr.io/audacioustux/k8swalski:latest
 
-# Docker Compose
-task docker:up
-
-# Local development
-task run
-```
-
-## Usage
-
-```bash
-# Basic request
+# Test it
 curl http://localhost:8080/test
-
-# Custom status code
-curl "http://localhost:8080/?x-set-response-status-code=404"
-
-# With delay
-curl "http://localhost:8080/?x-set-response-delay-ms=1000"
-
-# POST JSON
-curl -X POST -H "Content-Type: application/json" \
-  -d '{"key":"value"}' http://localhost:8080/api
 ```
 
 ## Configuration
-
-All configuration options with defaults and environment variable mappings:
 
 <!-- BEGIN_CLI_HELP -->
 ```
@@ -188,28 +157,7 @@ Options:
 
 ## Development
 
-```bash
-# Setup
-nix develop  # or: direnv allow
-
-# Build & test
-task build
-task test
-
-# Update README with latest CLI help
-task docs:update
-
-# Docker
-task docker:build  # ~3s cached, ~2min fresh
-task docker:up
-task docker:down
-
-# Format & lint
-task fmt
-task clippy
-```
-
-> **Note:** The CLI help section in this README is auto-generated. Run `task docs:update` locally or push changes to `src/config.rs` to trigger the GitHub Actions workflow.
+See [Taskfile.yml](Taskfile.yml) for available development tasks.
 
 ## License
 
