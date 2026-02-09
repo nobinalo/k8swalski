@@ -18,6 +18,21 @@ pub struct AppState {
     pub hostname: String,
 }
 
+// Health check handlers
+pub async fn liveness_handler() -> &'static str {
+    "OK"
+}
+
+pub async fn readiness_handler() -> Json<Value> {
+    // In production, you would check dependencies here:
+    // - Database connectivity
+    // - Cache availability
+    // - External service health
+    Json(serde_json::json!({
+        "status": "ready"
+    }))
+}
+
 #[derive(Debug, Deserialize)]
 pub struct EchoQueryParams {
     #[serde(rename = "x-set-response-status-code")]

@@ -17,7 +17,7 @@ services:
       - INCLUDE_ENV_VARS=false
       - PROMETHEUS=true
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/localhost/8080' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3

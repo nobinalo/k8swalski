@@ -14,9 +14,6 @@ LABEL org.opencontainers.image.description="HTTP/HTTPS echo server for debugging
 LABEL org.opencontainers.image.source="https://github.com/audacioustux/k8swalski"
 LABEL org.opencontainers.image.licenses="MIT"
 
-# Install curl for healthchecks
-RUN apk add --no-cache curl
-
 WORKDIR /app
 
 # Copy pre-built binary from artifact

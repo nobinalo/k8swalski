@@ -8,10 +8,13 @@ use tower_http::{
     compression::CompressionLayer, cors::CorsLayer, limit::RequestBodyLimitLayer, trace::TraceLayer,
 };
 
-use handlers::{AppState, echo_handler};
+use handlers::{AppState, echo_handler, liveness_handler, readiness_handler};
 
 pub fn build_router(state: AppState) -> Router {
-    let mut router = Router::new().fallback(echo_handler);
+    let mut router = Router::new()
+        .route("/livez", get(liveness_handler))
+        .route("/readyz", get(readiness_handler))
+        .fallback(echo_handler);
 
     // Add Prometheus metrics endpoint if enabled
     #[cfg(feature = "prometheus")]
