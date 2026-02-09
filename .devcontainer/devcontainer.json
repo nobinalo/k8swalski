@@ -27,7 +27,7 @@
                 "nix.serverPath": "nixd",
                 "terminal.integrated.defaultProfile.linux": "zsh",
                 "editor.formatOnSave": true,
-                "rust-analyzer.checkOnSave.command": "clippy",
+                "rust-analyzer.check.command": "clippy",
                 "rust-analyzer.cargo.features": "all",
                 "github.copilot.chat.codeGeneration.useInstructionFiles": true
             },
@@ -35,13 +35,13 @@
                 "jnoortheen.nix-ide",
                 "rust-lang.rust-analyzer",
                 "vadimcn.vscode-lldb",
-                "serayuzgur.crates",
                 "tamasfe.even-better-toml",
                 "redhat.vscode-yaml",
                 "github.copilot",
                 "mhutchie.git-graph",
                 "Gruntfuggly.todo-tree",
-                "mutantdino.resourcemonitor"
+                "mutantdino.resourcemonitor",
+                "fill-labs.dependi"
             ]
         },
         "codespaces": {
