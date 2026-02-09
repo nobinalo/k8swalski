@@ -24,7 +24,7 @@ jobs:
       - name: Generate CLI help
         id: help
         run: |
-          HELP_OUTPUT=$(nix develop --command cargo run --quiet -- --help)
+          HELP_OUTPUT=$(nix develop --command cargo run --quiet -- --help 2>/dev/null)
           cat >> $GITHUB_OUTPUT <<EOF
           content<<CONTENT
           $HELP_OUTPUT
