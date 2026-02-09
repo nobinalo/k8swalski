@@ -27,16 +27,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Setup sccache
+        uses: mozilla/sccache-action@v0.0.7
+      
       - name: Setup Rust Environment
         uses: ./.github/actions/setup-rust-env
       
       - name: Run checks
+        env:
+          SCCACHE_GHA_ENABLED: "true"
+          RUSTC_WRAPPER: "sccache"
         run: |
           nix develop .#ci --command cargo check --all-features
           nix develop .#ci --command cargo clippy --all-features -- -D warnings
           nix develop .#ci --command cargo fmt -- --check
       
       - name: Run tests
+        env:
+          SCCACHE_GHA_ENABLED: "true"
+          RUSTC_WRAPPER: "sccache"
         run: nix develop .#ci --command cargo nextest run --all-features
 
   build-binary:
