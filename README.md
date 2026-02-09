@@ -3,26 +3,66 @@
 [![Build](https://img.shields.io/github/actions/workflow/status/audacioustux/k8swalski/build-push-ghcr.yml?style=flat-square)](https://github.com/audacioustux/k8swalski/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
-HTTP/HTTPS echo server for debugging and testing. Built with Rust (axum + tokio).
+HTTP/HTTPS echo server for debugging and testing Kubernetes applications, webhooks, and API clients.
 
 ## Features
 
-- **Dual HTTP/HTTPS support** with configurable ports
-- **Request echo** - headers, body, query params, IP
-- **Response manipulation** - custom status, delays, content-type
-- **JWT decoding**, Prometheus metrics support
-- **JSON or human-readable logging** with path filtering
-- **CORS support** with flexible configuration
-- **Multi-arch Docker images** (amd64, arm64)
+- 🚀 **HTTP & HTTPS servers** with configurable ports and TLS
+- 🔍 **Request inspection** - echo headers, body, query params, client IP
+- ⚙️ **Response manipulation** - control status codes, delays, content types
+- 🔐 **JWT decoding** for Authorization headers
+- 📊 **Prometheus metrics** endpoint
+- 🌐 **CORS support** with flexible configuration
+- 📝 **Flexible logging** - JSON or human-readable, with path filtering
+- 🐳 **Multi-arch images** for amd64 and arm64
 
-## Quick Start
+## Installation
+
+### Docker
 
 ```bash
-# Docker
+# Pull and run
 docker run -p 8080:8080 -p 8443:8443 ghcr.io/audacioustux/k8swalski:latest
 
-# Test it
+# Test
 curl http://localhost:8080/test
+```
+
+### Docker Compose
+
+See [docker-compose.yml](docker-compose.yml) for full example.
+
+### Kubernetes
+
+See [k8s/](k8s/) for deployment manifests.
+
+## Usage
+
+### Basic Request
+
+```bash
+curl http://localhost:8080/test
+```
+
+### Custom Response
+
+```bash
+# Custom status code
+curl "http://localhost:8080/?x-set-response-status-code=404"
+
+# Add delay
+curl "http://localhost:8080/?x-set-response-delay-ms=1000"
+
+# Custom content type
+curl "http://localhost:8080/?x-set-response-content-type=text/html"
+```
+
+### POST Data
+
+```bash
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"key":"value"}' \
+  http://localhost:8080/api
 ```
 
 ## Configuration
@@ -83,8 +123,16 @@ Options:
 
 ## Development
 
-See [Taskfile.yml](Taskfile.yml) for available development tasks.
+```bash
+# Setup with Nix
+nix develop  # or: direnv allow
+
+# Available tasks
+task --list
+```
+
+See [Taskfile.yml](Taskfile.yml) for all development commands.
 
 ## License
 
-MIT
+[MIT](LICENSE)

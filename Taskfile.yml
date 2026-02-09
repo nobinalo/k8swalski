@@ -45,11 +45,6 @@ tasks:
     desc: "Watch and run the server on changes"
     cmd: cargo watch -x run
 
-  # Documentation tasks
-  docs:update:
-    desc: "Update README with CLI help output"
-    cmd: ./scripts/update-readme.sh
-
   # Clean tasks
   clean:docker:
     desc: "Clean Docker build cache"
