@@ -28,7 +28,6 @@ rustls = { version = "0.23.36", default-features = false, features = [
     "std",
     "tls12",
 ] }
-webpki-roots = "1.0.6"
 tokio = { version = "1.49.0", features = [
     "rt-multi-thread",
     "macros",
@@ -68,16 +67,13 @@ hyper-util = { version = "0.1.20", features = [
 ] }
 
 # Time and async utilities
-tokio-util = "0.7.18"
 chrono = { version = "0.4.43", features = ["serde"] }
-futures = "0.3.31"
 
 # Certificate generation
 rcgen = "0.14.7"
 
 # System utilities
 hostname = "0.4.2"
-url = "2.5.8"
 flate2 = "1.1.9"
 mime_guess = "2.0.5"
 bytes = "1.11.1"
