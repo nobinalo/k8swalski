@@ -21,8 +21,26 @@ jobs:
       - name: Setup Rust Environment
         uses: ./.github/actions/setup-rust-env
       
+      - name: Generate CLI help
+        id: help
+        run: |
+          HELP_OUTPUT=$(nix develop --command cargo run --quiet -- --help)
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          echo "$HELP_OUTPUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
       - name: Update README
-        run: nix develop --command bash .github/scripts/update-readme.sh
+        uses: actions/github-script@v7
+        env:
+          CLI_HELP: ${{ steps.help.outputs.content }}
+        with:
+          script: |
+            await require('./.github/scripts/replace-section.js')({
+              content: process.env.CLI_HELP,
+              filePath: 'README.md',
+              beginMarker: '<!-- BEGIN_CLI_HELP -->',
+              endMarker: '<!-- END_CLI_HELP -->'
+            })
       
       - name: Commit changes
         run: |
