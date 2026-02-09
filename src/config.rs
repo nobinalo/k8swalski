@@ -4,7 +4,19 @@ use std::path::PathBuf;
 
 #[derive(Parser, Debug, Clone)]
 #[command(name = "k8swalski")]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about)]
+#[command(long_about = "k8swalski is an HTTP/HTTPS echo server designed for debugging and testing.
+
+It echoes back request details including headers, body, query parameters, and more.
+Perfect for testing webhooks, debugging API clients, or understanding HTTP requests.
+
+Features:
+  • Dual HTTP and HTTPS support with configurable ports
+  • Request/response logging in human-readable or JSON format
+  • Optional JWT token decoding
+  • Prometheus metrics endpoint
+  • CORS support with flexible configuration
+  • Configurable request body and header size limits")]
 pub struct Config {
     /// HTTP port to listen on
     #[arg(long, env = "HTTP_PORT", default_value = "8080")]
