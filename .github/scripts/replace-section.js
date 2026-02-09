@@ -1,9 +1,13 @@
 // GitHub Action Script to replace content between markers in a file
 const fs = require('node:fs/promises');
 
-module.exports = async ({ content, filePath = 'README.md', beginMarker, endMarker }) => {
+module.exports = async ({ content, filePath, beginMarker, endMarker }) => {
     if (!content) {
         throw new Error('Content is required');
+    }
+    
+    if (!filePath) {
+        throw new Error('File path is required');
     }
     
     if (!beginMarker || !endMarker) {
