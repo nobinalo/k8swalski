@@ -23,6 +23,9 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+      RUSTC_WRAPPER: "sccache"
     
     steps:
       - uses: actions/checkout@v4
@@ -34,24 +37,21 @@ jobs:
         uses: ./.github/actions/setup-rust-env
       
       - name: Run checks
-        env:
-          SCCACHE_GHA_ENABLED: "true"
-          RUSTC_WRAPPER: "sccache"
         run: |
           nix develop .#ci --command cargo check --all-features
           nix develop .#ci --command cargo clippy --all-features -- -D warnings
           nix develop .#ci --command cargo fmt -- --check
       
       - name: Run tests
-        env:
-          SCCACHE_GHA_ENABLED: "true"
-          RUSTC_WRAPPER: "sccache"
         run: nix develop .#ci --command cargo nextest run --all-features
 
   build-binary:
     name: Build Binary ${{ matrix.arch }}
     runs-on: ubuntu-latest
     needs: test
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+      RUSTC_WRAPPER: "sccache"
     strategy:
       matrix:
         arch: [amd64, arm64]
@@ -71,9 +71,6 @@ jobs:
         uses: ./.github/actions/setup-rust-env
       
       - name: Build binary
-        env:
-          SCCACHE_GHA_ENABLED: "true"
-          RUSTC_WRAPPER: "sccache"
         run: |
           nix develop .#ci --command bash -c '
             cargo build --release --target ${{ matrix.target }}
