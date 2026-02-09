@@ -27,13 +27,8 @@ COPY src ./src
 # Build application with sccache
 RUN --mount=type=cache,target=/home/nonroot/.cache/sccache,uid=${UID},gid=${GID},sharing=locked \
     --mount=type=cache,target=/home/nonroot/.cargo/registry,uid=${UID},gid=${GID},sharing=locked \
-    --mount=type=cache,target=/home/nonroot/.cargo/git,uid=${UID},gid=${GID},sharing=locked <<EOF
-set -e
-cargo build --release
-sccache --show-stats
-cp target/release/k8swalski /tmp/k8swalski
-strip /tmp/k8swalski
-EOF
+    --mount=type=cache,target=/home/nonroot/.cargo/git,uid=${UID},gid=${GID},sharing=locked \
+    cargo build --release && sccache --show-stats && cp target/release/k8swalski /tmp/k8swalski && strip /tmp/k8swalski
 
 # Runtime stage
 FROM chainguard/wolfi-base:latest
