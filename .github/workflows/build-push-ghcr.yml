@@ -68,11 +68,7 @@ jobs:
         uses: ./.github/actions/setup-rust-env
       
       - name: Build binary
-        run: |
-          nix develop .#ci --command bash -c '
-            task ci:build TARGET=${{ matrix.target }}
-            strip target/${{ matrix.target }}/release/k8swalski
-          '
+        run: nix develop .#ci --command task ci:build-artifact TARGET=${{ matrix.target }}
       
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4

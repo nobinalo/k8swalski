@@ -56,6 +56,12 @@ tasks:
     desc: "Build release binary for target"
     cmd: cargo build --release --target {{.TARGET}}
 
+  ci:build-artifact:
+    desc: "Build and strip release binary for target (CI)"
+    cmds:
+      - cargo build --release --target {{.TARGET}}
+      - strip target/{{.TARGET}}/release/k8swalski
+
   # Test tasks
   test:watch:
     desc: "Watch and run tests on changes"
