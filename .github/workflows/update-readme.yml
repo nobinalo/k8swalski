@@ -24,7 +24,7 @@ jobs:
       - name: Generate CLI help
         id: help
         run: |
-          HELP_OUTPUT=$(nix develop --command sh -c 'cargo run --quiet -- --help' 2>&1 | grep -v "pre-commit" | grep -v "dev environment" | grep -v "task --list")
+          HELP_OUTPUT=$(nix develop --quiet --command cargo run --quiet -- --help)
           {
             echo "content<<CLI_HELP_EOF"
             echo "$HELP_OUTPUT"
