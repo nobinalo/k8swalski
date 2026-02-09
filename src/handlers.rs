@@ -439,6 +439,11 @@ fn extract_subdomains(headers: &HeaderMap) -> Option<Vec<String>> {
     // Remove port if present
     let host = host.split(':').next()?;
 
+    // Don't extract subdomains from IP addresses
+    if host.parse::<std::net::IpAddr>().is_ok() {
+        return None;
+    }
+
     // Split by dots and extract subdomains (excluding TLD and domain)
     let parts: Vec<&str> = host.split('.').collect();
 

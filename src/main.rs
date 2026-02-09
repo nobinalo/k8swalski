@@ -28,6 +28,9 @@ use k8swalski::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Install default crypto provider for rustls
+    rustls::crypto::ring::default_provider().install_default().ok();
+
     // Parse configuration
     let config = Config::parse();
 
