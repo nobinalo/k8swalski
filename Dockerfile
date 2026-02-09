@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM cgr.dev/chainguard/static:latest AS ci
+FROM cgr.dev/chainguard/static:latest AS runtime
 
 LABEL org.opencontainers.image.title="k8swalski"
 LABEL org.opencontainers.image.description="HTTP/HTTPS echo server for debugging and testing"
