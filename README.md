@@ -114,6 +114,8 @@ Options:
           Log JSON output without newlines [env: LOG_WITHOUT_NEWLINE=]
       --override-response-body-file-path <OVERRIDE_RESPONSE_BODY_FILE_PATH>
           Override response body with file content (path relative to current directory) [env: OVERRIDE_RESPONSE_BODY_FILE_PATH=]
+      --check-health
+          Perform health check and exit (used by Docker HEALTHCHECK)
   -h, --help
           Print help
   -V, --version
