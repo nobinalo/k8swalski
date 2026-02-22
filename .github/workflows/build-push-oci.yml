@@ -1,4 +1,4 @@
-name: Build and Push
+name: Build and Push OCI images
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -36,24 +36,24 @@ jobs:
         id: bins
         run: |
           echo "bins=$(cargo metadata --no-deps --format-version 1 | jq -c '
-            [.packages[]
+            [ .packages[]
             | select(any(.targets[]; .kind[] == "bin"))
-            | .name]
+            | .name ]
           ')" >> $GITHUB_OUTPUT
 
       - name: Set targets
         id: targets
         run: |
           echo "targets=$(jq -cn '[
-            {"id":"amd64", "triple":"x86_64-unknown-linux-musl",  "platform":"linux/amd64"},
-            {"id":"arm64", "triple":"aarch64-unknown-linux-musl",  "platform":"linux/arm64"}
+            {"id":"amd64", "triple":"x86_64-unknown-linux-musl", "platform":"linux/amd64"},
+            {"id":"arm64", "triple":"aarch64-unknown-linux-musl", "platform":"linux/arm64"}
           ]')" >> $GITHUB_OUTPUT
 
   test:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: Swatinem/rust-cache@v2
         with:
@@ -77,12 +77,11 @@ jobs:
         bin: ${{ fromJson(needs.plan.outputs.bins) }}
         target: ${{ fromJson(needs.plan.outputs.targets) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: mlugg/setup-zig@v2
       - uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.target.triple }}-${{ matrix.bin }}
           cache-targets: false
 
       - name: Install cargo-zigbuild
@@ -103,7 +102,7 @@ jobs:
           args: --best --lzma
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.bin }}-${{ matrix.target.id }}
           path: target/${{ matrix.target.triple }}/release/${{ matrix.bin }}
@@ -117,10 +116,10 @@ jobs:
       matrix:
         bin: ${{ fromJson(needs.plan.outputs.bins) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: ${{ matrix.bin }}-*
           path: .

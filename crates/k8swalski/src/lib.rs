@@ -3,12 +3,11 @@ pub mod error;
 pub mod handlers;
 
 use axum::{Router, routing::get};
+use handlers::{AppState, echo_handler, liveness_handler, readiness_handler};
 use tower::ServiceBuilder;
 use tower_http::{
     compression::CompressionLayer, cors::CorsLayer, limit::RequestBodyLimitLayer, trace::TraceLayer,
 };
-
-use handlers::{AppState, echo_handler, liveness_handler, readiness_handler};
 
 pub fn build_router(state: AppState) -> Router {
     let mut router = Router::new()

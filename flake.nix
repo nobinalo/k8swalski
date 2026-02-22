@@ -28,13 +28,7 @@
           inherit system overlays;
         };
 
-        rustToolchain = pkgs.rust-bin.stable.latest.default.override {
-          extensions = [
-            "rust-src"
-            "rust-analyzer"
-            "clippy"
-          ];
-        };
+        rustToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
 
         pre-commit-check = pre-commit-hooks.lib.${system}.run {
           src = ./.;
@@ -63,7 +57,6 @@
             # Development tools
             cargo-watch
             cargo-nextest
-            cargo-cross
 
             # Task runner
             go-task

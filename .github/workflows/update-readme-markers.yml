@@ -1,14 +1,13 @@
-name: Update README
+name: Update README markers
 
 on:
-  push:
-    branches: [main]
-    paths: ['src/config.rs', 'src/main.rs', 'Cargo.toml']
+  schedule:
+    - cron: '0 0 * * 0' # Every Sunday at midnight
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -19,22 +18,17 @@ jobs:
     
     steps:
       - uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Install Rust Toolchain
-        uses: dtolnay/rust-toolchain@v1
-        with:
-          toolchain: stable
 
-      - name: Setup Rust cache
-        uses: Swatinem/rust-cache@v2
+      - uses: mozilla-actions/sccache-action@v0.0.9
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-targets: false
 
       - name: Generate CLI help
         id: help
         run: |
           echo "content<<CLI_HELP_EOF" >> $GITHUB_OUTPUT
-          cargo run --quiet -- --help >> $GITHUB_OUTPUT
+          cargo run -p k8swalski --quiet -- --help >> $GITHUB_OUTPUT
           echo "CLI_HELP_EOF" >> $GITHUB_OUTPUT
       
       - name: Update README

@@ -1,10 +1,12 @@
+use std::path::PathBuf;
+
 use clap::Parser;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 #[derive(Parser, Debug, Clone)]
 #[command(name = "k8swalski")]
 #[command(author, version, about, long_about = None)]
+#[allow(clippy::struct_excessive_bools)] // CLI config struct; booleans are idiomatic here
 pub struct Config {
     /// HTTP port to listen on
     #[arg(long, env = "HTTP_PORT", default_value = "8080")]
@@ -105,9 +107,9 @@ impl std::str::FromStr for LogFormat {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "human" => Ok(LogFormat::Human),
-            "json" => Ok(LogFormat::Json),
-            _ => Err(format!("Invalid log format: {}. Use 'human' or 'json'", s)),
+            "human" => Ok(Self::Human),
+            "json" => Ok(Self::Json),
+            _ => Err(format!("Invalid log format: {s}. Use 'human' or 'json'")),
         }
     }
 }
@@ -115,8 +117,8 @@ impl std::str::FromStr for LogFormat {
 impl std::fmt::Display for LogFormat {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            LogFormat::Human => write!(f, "human"),
-            LogFormat::Json => write!(f, "json"),
+            Self::Human => write!(f, "human"),
+            Self::Json => write!(f, "json"),
         }
     }
 }

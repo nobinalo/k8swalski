@@ -1,13 +1,15 @@
-use axum::http::{HeaderName, HeaderValue, StatusCode};
-use axum_test::TestServer;
-use serde_json::Value;
-
-use k8swalski::handlers::AppState;
 use std::sync::Arc;
 
-fn create_test_server() -> TestServer {
-    use k8swalski::config::{Config, LogFormat};
+use anyhow::Result;
+use axum::http::{HeaderName, HeaderValue, StatusCode};
+use axum_test::TestServer;
+use k8swalski::handlers::AppState;
+use serde_json::Value;
+
+fn create_test_server() -> Result<TestServer> {
     use std::net::SocketAddr;
+
+    use k8swalski::config::{Config, LogFormat};
 
     let state = AppState {
         config: Arc::new(Config {
@@ -15,7 +17,7 @@ fn create_test_server() -> TestServer {
             https_port: 8443,
             tls_cert_path: "/tmp/cert.pem".into(),
             tls_key_path: "/tmp/key.pem".into(),
-            max_body_size: 10485760,
+            max_body_size: 10_485_760,
             log_format: LogFormat::Human,
             disable_request_logs: false,
             log_ignore_path: None,
@@ -39,12 +41,12 @@ fn create_test_server() -> TestServer {
     };
 
     let app = k8swalski::build_router(state).into_make_service_with_connect_info::<SocketAddr>();
-    TestServer::new(app).unwrap()
+    TestServer::new(app)
 }
 
 #[tokio::test]
-async fn test_basic_echo() {
-    let server = create_test_server();
+async fn test_basic_echo() -> Result<()> {
+    let server = create_test_server()?;
     let response = server.get("/test").await;
 
     response.assert_status(StatusCode::OK);
@@ -53,19 +55,21 @@ async fn test_basic_echo() {
     assert_eq!(json["path"], "/test");
     assert_eq!(json["method"], "GET");
     assert_eq!(json["hostname"], "test-host");
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_custom_status_code() {
-    let server = create_test_server();
+async fn test_custom_status_code() -> Result<()> {
+    let server = create_test_server()?;
     let response = server.get("/test?x-set-response-status-code=404").await;
 
     response.assert_status(StatusCode::NOT_FOUND);
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_custom_status_code_header() {
-    let server = create_test_server();
+async fn test_custom_status_code_header() -> Result<()> {
+    let server = create_test_server()?;
     let response = server
         .get("/test")
         .add_header(
@@ -75,11 +79,12 @@ async fn test_custom_status_code_header() {
         .await;
 
     response.assert_status(StatusCode::CREATED);
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_json_body_parsing() {
-    let server = create_test_server();
+async fn test_json_body_parsing() -> Result<()> {
+    let server = create_test_server()?;
     let json_body = r#"{"key": "value", "number": 42}"#;
 
     let response = server
@@ -95,15 +100,12 @@ async fn test_json_body_parsing() {
 
     let json: Value = response.json();
     assert_eq!(json["body"], json_body);
-    // Note: axum-test may override content-type, so JSON parsing might not work
-    // assert!(json["json"].is_object());
-    // assert_eq!(json["json"]["key"], "value");
-    // assert_eq!(json["json"]["number"], 42);
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_query_parameters() {
-    let server = create_test_server();
+async fn test_query_parameters() -> Result<()> {
+    let server = create_test_server()?;
     let response = server.get("/test?foo=bar&baz=qux").await;
 
     response.assert_status(StatusCode::OK);
@@ -111,11 +113,12 @@ async fn test_query_parameters() {
     let json: Value = response.json();
     assert_eq!(json["query"]["foo"], "bar");
     assert_eq!(json["query"]["baz"], "qux");
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_headers_echo() {
-    let server = create_test_server();
+async fn test_headers_echo() -> Result<()> {
+    let server = create_test_server()?;
     let response = server
         .get("/test")
         .add_header(
@@ -130,11 +133,12 @@ async fn test_headers_echo() {
     let json: Value = response.json();
     assert_eq!(json["headers"]["x-custom-header"], "custom-value");
     assert_eq!(json["headers"]["user-agent"], "test-agent");
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_response_body_only() {
-    let server = create_test_server();
+async fn test_response_body_only() -> Result<()> {
+    let server = create_test_server()?;
     let body_content = "test body content";
 
     let response = server.post("/test?response_body_only=true").text(body_content).await;
@@ -143,11 +147,12 @@ async fn test_response_body_only() {
 
     let body_str = response.text();
     assert_eq!(body_str, body_content);
+    Ok(())
 }
 
 #[tokio::test]
-async fn test_xhr_detection() {
-    let server = create_test_server();
+async fn test_xhr_detection() -> Result<()> {
+    let server = create_test_server()?;
     let response = server
         .get("/test")
         .add_header(
@@ -160,20 +165,22 @@ async fn test_xhr_detection() {
 
     let json: Value = response.json();
     assert_eq!(json["xhr"], true);
+    Ok(())
 }
 
 #[cfg(feature = "jwt")]
 #[tokio::test]
-async fn test_jwt_decoding() {
-    use k8swalski::config::{Config, LogFormat};
+async fn test_jwt_decoding() -> Result<()> {
     use std::net::SocketAddr;
+
+    use k8swalski::config::{Config, LogFormat};
 
     let config = Config {
         http_port: 8080,
         https_port: 8443,
         tls_cert_path: "/tmp/cert.pem".into(),
         tls_key_path: "/tmp/key.pem".into(),
-        max_body_size: 10485760,
+        max_body_size: 10_485_760,
         log_format: LogFormat::Human,
         disable_request_logs: false,
         log_ignore_path: None,
@@ -195,37 +202,36 @@ async fn test_jwt_decoding() {
     let state = AppState { config: Arc::new(config), hostname: "test-host".to_string() };
 
     let app = k8swalski::build_router(state).into_make_service_with_connect_info::<SocketAddr>();
-    let server = TestServer::new(app).unwrap();
+    let server = TestServer::new(app)?;
 
     // Sample JWT token (not verified, just for parsing)
     let token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
 
     let response = server
         .get("/test")
-        .add_header(HeaderName::from_static("authorization"), HeaderValue::from_str(token).unwrap())
+        .add_header(HeaderName::from_static("authorization"), HeaderValue::from_str(token)?)
         .await;
 
     response.assert_status(StatusCode::OK);
 
     let json: Value = response.json();
     assert!(json["jwt"].is_object());
-    // Note: JWT parsing may have issues in test environment
-    // assert!(json["jwt"]["header"].is_object());
-    // assert!(json["jwt"]["payload"].is_object());
+    Ok(())
 }
 
 #[cfg(feature = "prometheus")]
 #[tokio::test]
-async fn test_metrics_endpoint() {
-    use k8swalski::config::{Config, LogFormat};
+async fn test_metrics_endpoint() -> Result<()> {
     use std::net::SocketAddr;
+
+    use k8swalski::config::{Config, LogFormat};
 
     let config = Config {
         http_port: 8080,
         https_port: 8443,
         tls_cert_path: "/tmp/cert.pem".into(),
         tls_key_path: "/tmp/key.pem".into(),
-        max_body_size: 10485760,
+        max_body_size: 10_485_760,
         log_format: LogFormat::Human,
         disable_request_logs: false,
         log_ignore_path: None,
@@ -247,13 +253,14 @@ async fn test_metrics_endpoint() {
     let state = AppState { config: Arc::new(config), hostname: "test-host".to_string() };
 
     let app = k8swalski::build_router(state).into_make_service_with_connect_info::<SocketAddr>();
-    let server = TestServer::new(app).unwrap();
+    let server = TestServer::new(app)?;
 
     let response = server.get("/metrics").await;
 
     response.assert_status(StatusCode::OK);
     // Check that content-type starts with the expected value
     let header = response.header("content-type");
-    let content_type = header.to_str().unwrap();
+    let content_type = header.to_str()?;
     assert!(content_type.starts_with("text/plain; version=0.0.4"));
+    Ok(())
 }

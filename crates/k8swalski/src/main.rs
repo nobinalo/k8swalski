@@ -1,7 +1,8 @@
+use std::{net::SocketAddr, path::Path, sync::Arc};
+
 use anyhow::{Context, Result};
 use axum_server::tls_rustls::RustlsConfig;
 use clap::Parser;
-use std::{net::SocketAddr, path::Path, sync::Arc};
 use tokio::signal;
 use tracing::{info, warn};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -14,7 +15,7 @@ fn health_check() -> Result<()> {
             std::process::exit(1)
         },
         Err(e) => {
-            eprintln!("Health check failed: {}", e);
+            eprintln!("Health check failed: {e}");
             std::process::exit(1)
         },
     }
@@ -27,6 +28,7 @@ use k8swalski::{
 };
 
 #[tokio::main]
+#[allow(clippy::similar_names)] // http_* and https_* are intentionally parallel
 async fn main() -> Result<()> {
     // Install default crypto provider for rustls
     rustls::crypto::ring::default_provider().install_default().ok();
@@ -201,6 +203,7 @@ async fn run_https_server(
     Ok(())
 }
 
+#[allow(clippy::expect_used)] // signal handler setup failure is unrecoverable
 async fn shutdown_signal() {
     let ctrl_c = async {
         signal::ctrl_c().await.expect("Failed to install Ctrl+C handler");
@@ -218,7 +221,7 @@ async fn shutdown_signal() {
     let terminate = std::future::pending::<()>();
 
     tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
+        () = ctrl_c => {},
+        () = terminate => {},
     }
 }

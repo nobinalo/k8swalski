@@ -1,0 +1,106 @@
+[package]
+name = "k8swalski"
+description = "HTTP/HTTPS echo server for debugging and testing Kubernetes applications, webhooks, and API clients."
+readme = "../../README.md"
+categories = ["network-programming", "web-programming::http-server"]
+keywords = ["http", "echo", "server", "debugging", "testing"]
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version = "1.85"
+
+[[bin]]
+name = "k8swalski"
+path = "src/main.rs"
+
+[lib]
+name = "k8swalski"
+path = "src/lib.rs"
+
+[dependencies]
+# Web framework
+axum = { version = "0.8.8", features = ["macros", "http2"] }
+axum-server = { version = "0.8.0", default-features = false, features = [
+    "tls-rustls",
+] }
+rustls = { version = "0.23.36", default-features = false, features = [
+    "ring",
+    "std",
+    "tls12",
+] }
+tokio = { version = "1.49.0", features = [
+    "rt-multi-thread",
+    "macros",
+    "signal",
+    "net",
+    "fs",
+] }
+tower = "0.5.3"
+tower-http = { version = "0.6.8", features = [
+    "trace",
+    "compression-gzip",
+    "limit",
+    "cors",
+] }
+
+# Serialization
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+url = "2.5.8"
+
+# Logging & Tracing
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["json", "env-filter"] }
+
+# CLI & Configuration
+clap = { version = "4.5.60", features = ["derive", "env"] }
+
+# Error handling
+anyhow = "1.0.102"
+thiserror = "2.0.18"
+
+# HTTP/TLS
+hyper = { version = "1.8.1", features = ["full"] }
+hyper-util = { version = "0.1.20", features = [
+    "tokio",
+    "server",
+    "server-auto",
+] }
+
+# Time and async utilities
+chrono = { version = "0.4.43", features = ["serde"] }
+
+# Certificate generation
+rcgen = "0.14.7"
+
+# System utilities
+hostname = "0.4.2"
+flate2 = "1.1.9"
+mime_guess = "2.0.5"
+bytes = "1.11.1"
+reqwest = { version = "0.13.2", default-features = false, features = [
+    "rustls",
+    "blocking",
+] }
+
+# Optional features
+jsonwebtoken = { version = "10.3.0", optional = true, default-features = false, features = [
+    "use_pem",
+] }
+prometheus = { version = "0.14.0", optional = true }
+
+[features]
+default = ["jwt", "prometheus", "mtls"]
+jwt = ["dep:jsonwebtoken"]
+prometheus = ["dep:prometheus"]
+mtls = []
+default-certs = []
+
+[dev-dependencies]
+axum-test = "18.7.0"
+serde_json = "1.0.149"
+
+[lints]
+workspace = true
