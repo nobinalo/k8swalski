@@ -25,7 +25,7 @@ jobs:
     name: Plan Workspace
     runs-on: ubuntu-latest
     outputs:
-      bins:    ${{ steps.bins.outputs.bins }}
+      bins: ${{ steps.bins.outputs.bins }}
       targets: ${{ steps.targets.outputs.targets }}
     steps:
       - uses: actions/checkout@v6
@@ -35,16 +35,19 @@ jobs:
       - name: List Binaries
         id: bins
         run: |
-          echo "bins=$(cargo metadata --no-deps --format-version 1 | jq -c '[.packages[] | select(any(.targets[]; .kind[] == "bin")) | .name]')" >> $GITHUB_OUTPUT
+          echo "bins=$(cargo metadata --no-deps --format-version 1 | jq -c '
+            [.packages[]
+            | select(any(.targets[]; .kind[] == "bin"))
+            | .name]
+          ')" >> $GITHUB_OUTPUT
 
       - name: Set targets
         id: targets
-        env:
-          TARGETS: |
-            [ {"id":"amd64", "triple":"x86_64-unknown-linux-musl",  "platform":"linux/amd64"}
-            , {"id":"arm64", "triple":"aarch64-unknown-linux-musl",  "platform":"linux/arm64"}
-            ]
-        run: echo "targets=$TARGETS" >> $GITHUB_OUTPUT
+        run: |
+          echo "targets=$(jq -cn '[
+            {"id":"amd64", "triple":"x86_64-unknown-linux-musl",  "platform":"linux/amd64"},
+            {"id":"arm64", "triple":"aarch64-unknown-linux-musl",  "platform":"linux/arm64"}
+          ]')" >> $GITHUB_OUTPUT
 
   test:
     name: Test
@@ -71,7 +74,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        bin:    ${{ fromJson(needs.plan.outputs.bins) }}
+        bin: ${{ fromJson(needs.plan.outputs.bins) }}
         target: ${{ fromJson(needs.plan.outputs.targets) }}
     steps:
       - uses: actions/checkout@v4
@@ -163,7 +166,7 @@ jobs:
           context: .
           push: true
           platforms: ${{ steps.platforms.outputs.list }}
-          tags:   ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           file: ${{ runner.temp }}/Dockerfile
           provenance: mode=max
