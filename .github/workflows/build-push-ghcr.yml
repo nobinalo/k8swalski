@@ -25,20 +25,26 @@ jobs:
     name: Plan Workspace
     runs-on: ubuntu-latest
     outputs:
-      bins:   ${{ steps.bins.outputs.bins }}
-      arches: ${{ steps.arches.outputs.arches }}
+      bins:    ${{ steps.bins.outputs.bins }}
+      targets: ${{ steps.targets.outputs.targets }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Discover binaries
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: List Binaries
         id: bins
         run: |
-          # Extract binary names from Cargo metadata to drive the build matrix
-          QUERY='.packages[].targets[] | select(.kind[] == "bin") | .name'
-          BINS=$(cargo metadata --no-deps --format-version 1 | jq -c "[$QUERY]")
-          echo "bins=$BINS" >> $GITHUB_OUTPUT
-      - name: Set target architectures
-        id: arches
-        run: echo 'arches=["amd64","arm64"]' >> $GITHUB_OUTPUT
+          echo "bins=$(cargo metadata --no-deps --format-version 1 | jq -c '[.packages[] | select(any(.targets[]; .kind[] == "bin")) | .name]')" >> $GITHUB_OUTPUT
+
+      - name: Set targets
+        id: targets
+        env:
+          TARGETS: |
+            [ {"id":"amd64", "triple":"x86_64-unknown-linux-musl",  "platform":"linux/amd64"}
+            , {"id":"arm64", "triple":"aarch64-unknown-linux-musl",  "platform":"linux/arm64"}
+            ]
+        run: echo "targets=$TARGETS" >> $GITHUB_OUTPUT
 
   test:
     name: Test
@@ -48,9 +54,7 @@ jobs:
       - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: Swatinem/rust-cache@v2
         with:
-          # sccache handles the compiled artifacts; disabling rust-cache 
-          # target caching prevents redundant I/O and cache limit exhaustion.
-          cache-targets: false 
+          cache-targets: false
       - name: Install nextest
         uses: taiki-e/install-action@v2
         with:
@@ -61,26 +65,21 @@ jobs:
         run: cargo clippy --all -- -D warnings
 
   build:
-    name: Build ${{ matrix.bin }} (${{ matrix.arch }})
+    name: Build ${{ matrix.bin }} (${{ matrix.target.id }})
     needs: [plan]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        bin:   ${{ fromJson(needs.plan.outputs.bins) }}
-        arch:  ${{ fromJson(needs.plan.outputs.arches) }}
-        include:
-          - arch: amd64
-            target: x86_64-unknown-linux-musl
-          - arch: arm64
-            target: aarch64-unknown-linux-musl
+        bin:    ${{ fromJson(needs.plan.outputs.bins) }}
+        target: ${{ fromJson(needs.plan.outputs.targets) }}
     steps:
       - uses: actions/checkout@v4
       - uses: mozilla-actions/sccache-action@v0.0.9
-      - uses: mlugg/setup-zig@v2 # Provides the cross-compilation toolchain
+      - uses: mlugg/setup-zig@v2
       - uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.target }}-${{ matrix.bin }}
+          key: ${{ matrix.target.triple }}-${{ matrix.bin }}
           cache-targets: false
 
       - name: Install cargo-zigbuild
@@ -89,22 +88,22 @@ jobs:
           tool: cargo-zigbuild
 
       - name: Add Rust target
-        run: rustup target add ${{ matrix.target }}
+        run: rustup target add ${{ matrix.target.triple }}
 
       - name: Build binary
-        run: cargo zigbuild --release --target ${{ matrix.target }} -p ${{ matrix.bin }}
+        run: cargo zigbuild --release --target ${{ matrix.target.triple }} -p ${{ matrix.bin }}
 
       - name: Compress binary (UPX)
         uses: crazy-max/ghaction-upx@v3
         with:
-          files: target/${{ matrix.target }}/release/${{ matrix.bin }}
+          files: target/${{ matrix.target.triple }}/release/${{ matrix.bin }}
           args: --best --lzma
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.bin }}-${{ matrix.arch }}
-          path: target/${{ matrix.target }}/release/${{ matrix.bin }}
+          name: ${{ matrix.bin }}-${{ matrix.target.id }}
+          path: target/${{ matrix.target.triple }}/release/${{ matrix.bin }}
           if-no-files-found: error
 
   publish:
@@ -115,13 +114,18 @@ jobs:
       matrix:
         bin: ${{ fromJson(needs.plan.outputs.bins) }}
     steps:
-      - uses: actions/checkout@v4 
+      - uses: actions/checkout@v4
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: ${{ matrix.bin }}-*
           path: .
+
+      - name: Compute platforms
+        id: platforms
+        run: |
+          echo "list=$(echo '${{ needs.plan.outputs.targets }}' | jq -r '[.[].platform] | join(",")')" >> $GITHUB_OUTPUT
 
       - name: Generate Dockerfile
         uses: ./.github/actions/write-file
@@ -130,7 +134,6 @@ jobs:
           contents: |
             FROM scratch
             ARG TARGETARCH
-            # Map platform-specific artifact folders to the root binary
             COPY ${{ matrix.bin }}-${TARGETARCH}/${{ matrix.bin }} /${{ matrix.bin }}
             USER 65532:65532
             ENTRYPOINT ["/${{ matrix.bin }}"]
@@ -159,8 +162,11 @@ jobs:
         with:
           context: .
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ steps.platforms.outputs.list }}
           tags:   ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Pointing to the physical file created by our local action
           file: ${{ runner.temp }}/Dockerfile
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

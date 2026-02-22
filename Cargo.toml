@@ -7,7 +7,7 @@ authors = ["audacioustux <contact@audacioustux.com>"]
 license = "MIT"
 description = "HTTP/HTTPS echo server for debugging and testing Kubernetes applications, webhooks, and API clients."
 repository = "https://github.com/nobinalo/k8swalski"
-resolver = "2"
+resolver = "3"
 
 [[bin]]
 name = "k8swalski"
@@ -46,17 +46,17 @@ tower-http = { version = "0.6.8", features = [
 # Serialization
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-url = "2.5.4"
+url = "2.5.8"
 
 # Logging & Tracing
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["json", "env-filter"] }
 
 # CLI & Configuration
-clap = { version = "4.5.57", features = ["derive", "env"] }
+clap = { version = "4.5.60", features = ["derive", "env"] }
 
 # Error handling
-anyhow = "1.0.101"
+anyhow = "1.0.102"
 thiserror = "2.0.18"
 
 # HTTP/TLS
