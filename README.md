@@ -1,6 +1,6 @@
 # k8swalski
 
-[![Build](https://img.shields.io/github/actions/workflow/status/nobinalo/k8swalski/build-push-ghcr.yml?style=flat-square)](https://github.com/nobinalo/k8swalski/actions)
+[![Build and Push OCI images](https://github.com/nobinalo/k8swalski/actions/workflows/build-push-oci.yml/badge.svg)](https://github.com/nobinalo/k8swalski/actions/workflows/build-push-oci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
 <!-- BEGIN_CLI_HELP -->
