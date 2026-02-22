@@ -1,6 +1,5 @@
 name: Build and Push
 
-# ─── Triggers ────────────────────────────────────────────────────────────────
 on:
   push:
     branches: [main]
@@ -8,26 +7,20 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# ─── Concurrency ─────────────────────────────────────────────────────────────
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# ─── Permissions ─────────────────────────────────────────────────────────────
 permissions:
   contents: read
   packages: write
 
-# ─── Global Environment ──────────────────────────────────────────────────────
 env:
   REGISTRY: ghcr.io
   RUSTC_WRAPPER: sccache
   SCCACHE_GHA_ENABLED: "true"
 
-# ─── Jobs ────────────────────────────────────────────────────────────────────
 jobs:
-
-  # Determines which binaries exist in the workspace and which architectures to target
   plan:
     name: Plan Workspace
     runs-on: ubuntu-latest
@@ -36,21 +29,17 @@ jobs:
       arches: ${{ steps.arches.outputs.arches }}
     steps:
       - uses: actions/checkout@v4
-
       - name: Discover binaries
         id: bins
         run: |
+          # Extract binary names from Cargo metadata to drive the build matrix
           QUERY='.packages[].targets[] | select(.kind[] == "bin") | .name'
           BINS=$(cargo metadata --no-deps --format-version 1 | jq -c "[$QUERY]")
           echo "bins=$BINS" >> $GITHUB_OUTPUT
-
       - name: Set target architectures
         id: arches
         run: echo 'arches=["amd64","arm64"]' >> $GITHUB_OUTPUT
 
-  # ───────────────────────────────────────────────────────────────────────────
-
-  # Runs tests and linting — must pass before any image is published
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -58,21 +47,19 @@ jobs:
       - uses: actions/checkout@v4
       - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: Swatinem/rust-cache@v2
-
+        with:
+          # sccache handles the compiled artifacts; disabling rust-cache 
+          # target caching prevents redundant I/O and cache limit exhaustion.
+          cache-targets: false 
       - name: Install nextest
         uses: taiki-e/install-action@v2
         with:
           tool: nextest
-
       - name: Run tests
         run: cargo nextest run --all
-
       - name: Run clippy
         run: cargo clippy --all -- -D warnings
 
-  # ───────────────────────────────────────────────────────────────────────────
-
-  # Cross-compiles each binary for each architecture and uploads the result as an artifact
   build:
     name: Build ${{ matrix.bin }} (${{ matrix.arch }})
     needs: [plan]
@@ -90,10 +77,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: mozilla-actions/sccache-action@v0.0.9
-      - uses: mlugg/setup-zig@v2
+      - uses: mlugg/setup-zig@v2 # Provides the cross-compilation toolchain
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.target }}-${{ matrix.bin }}
+          cache-targets: false
 
       - name: Install cargo-zigbuild
         uses: taiki-e/install-action@v2
@@ -109,8 +97,7 @@ jobs:
       - name: Compress binary (UPX)
         uses: crazy-max/ghaction-upx@v3
         with:
-          files: |
-            target/${{ matrix.target }}/release/${{ matrix.bin }}
+          files: target/${{ matrix.target }}/release/${{ matrix.bin }}
           args: --best --lzma
 
       - name: Upload artifact
@@ -120,9 +107,6 @@ jobs:
           path: target/${{ matrix.target }}/release/${{ matrix.bin }}
           if-no-files-found: error
 
-  # ───────────────────────────────────────────────────────────────────────────
-
-  # Assembles artifacts into a multi-arch Docker image and pushes to GHCR
   publish:
     name: Publish ${{ matrix.bin }}
     needs: [plan, test, build]
@@ -131,11 +115,25 @@ jobs:
       matrix:
         bin: ${{ fromJson(needs.plan.outputs.bins) }}
     steps:
+      - uses: actions/checkout@v4 
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: ${{ matrix.bin }}-*
           path: .
+
+      - name: Generate Dockerfile
+        uses: ./.github/actions/write-file
+        with:
+          path: ${{ runner.temp }}/Dockerfile
+          contents: |
+            FROM scratch
+            ARG TARGETARCH
+            # Map platform-specific artifact folders to the root binary
+            COPY ${{ matrix.bin }}-${TARGETARCH}/${{ matrix.bin }} /${{ matrix.bin }}
+            USER 65532:65532
+            ENTRYPOINT ["/${{ matrix.bin }}"]
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -164,9 +162,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags:   ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          file: |
-            FROM scratch
-            ARG TARGETARCH
-            COPY ${{ matrix.bin }}-${TARGETARCH}/${{ matrix.bin }} /${{ matrix.bin }}
-            USER 65532:65532
-            ENTRYPOINT ["/${{ matrix.bin }}"]
+          # Pointing to the physical file created by our local action
+          file: ${{ runner.temp }}/Dockerfile

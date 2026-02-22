@@ -1,0 +1,26 @@
+name: 'Write File'
+description: 'Securely writes a multiline string to a file using shell builtins'
+
+inputs:
+  path:
+    description: 'Destination file path'
+    required: true
+  contents:
+    description: 'File contents'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create file
+      shell: bash
+      env:
+        FILE_PATH: ${{ inputs.path }}
+        FILE_CONTENTS: ${{ inputs.contents }}
+      run: |
+        # Ensure target directory exists for nested paths
+        mkdir -p "$(dirname "$FILE_PATH")"
+        
+        # Using printf with a literal string %s is safer than cat/echo 
+        # as it avoids accidental shell expansion or interpretation of the content.
+        printf "%s\n" "$FILE_CONTENTS" > "$FILE_PATH"
