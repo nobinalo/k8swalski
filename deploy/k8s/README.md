@@ -61,15 +61,3 @@ Environment variables can be configured via:
 - Secrets
 
 See [deployment.yaml](base/deployment.yaml) for available options.
-
-## Resource Limits
-
-### Development
-- CPU: 50m request, 200m limit
-- Memory: 64Mi request, 128Mi limit
-- Replicas: 1
-
-### Production
-- CPU: 100m request, 300m limit
-- Memory: 128Mi request, 256Mi limit
-- Replicas: 3
