@@ -38,6 +38,12 @@ spec:
             memory: 64Mi
           limits:
             memory: 128Mi
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
         livenessProbe:
           httpGet:
             path: /livez
@@ -50,3 +56,6 @@ spec:
             port: http
           initialDelaySeconds: 5
           periodSeconds: 10
+      volumes:
+      - name: tmp
+        emptyDir: {}
