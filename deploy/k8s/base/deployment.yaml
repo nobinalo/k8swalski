@@ -17,6 +17,7 @@ spec:
       containers:
       - name: k8swalski
         image: ghcr.io/nobinalo/k8swalski:latest
+        imagePullPolicy: Always
         ports:
         - name: http
           containerPort: 8080
