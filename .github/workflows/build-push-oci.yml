@@ -136,7 +136,7 @@ jobs:
           contents: |
             FROM scratch
             ARG TARGETARCH
-            COPY ${{ matrix.bin }}-${TARGETARCH}/${{ matrix.bin }} /${{ matrix.bin }}
+            COPY --chmod=755 ${{ matrix.bin }}-${TARGETARCH}/${{ matrix.bin }} /${{ matrix.bin }}
             USER 65532:65532
             ENTRYPOINT ["/${{ matrix.bin }}"]
 
